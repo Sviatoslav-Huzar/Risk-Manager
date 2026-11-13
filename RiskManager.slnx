@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RiskManager.App/RiskManager.App.csproj" />
+    <Project Path="src/RiskManager.Core/RiskManager.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RiskManager.Tests/RiskManager.Tests.csproj" />
+  </Folder>
+</Solution>
