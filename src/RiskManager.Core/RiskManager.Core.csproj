@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- catalog.json is compiled into the DLL, so the library needs no external files. -->
+    <EmbeddedResource Include="Data\catalog.json" LogicalName="RiskManager.Core.Data.catalog.json" />
+  </ItemGroup>
+
 </Project>
