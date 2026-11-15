@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
