@@ -1,0 +1,23 @@
+# Let Git detect text files and store them with LF line endings.
+# On checkout every machine gets its native endings (CRLF on Windows).
+* text=auto
+
+# Source files: always text.
+# diff=csharp makes diff hunk headers show the enclosing method name.
+*.cs      text diff=csharp
+*.xaml    text
+*.csproj  text
+*.slnx    text
+*.props   text
+*.targets text
+*.json    text
+*.yml     text
+*.md      text
+
+# Binary files: never convert line endings, never show a text diff.
+*.png  binary
+*.jpg  binary
+*.ico  binary
+*.pdf  binary
+*.docx binary
+*.xlsx binary
