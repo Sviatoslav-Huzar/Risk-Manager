@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net11.0-windows</TargetFramework>
+    <TargetFramework>net11.0-windows10.0.19041.0</TargetFramework>
     <!-- RiskManager.App references WPF, so the test host must load WPF assemblies too. -->
     <UseWPF>true</UseWPF>
     <ImplicitUsings>enable</ImplicitUsings>
