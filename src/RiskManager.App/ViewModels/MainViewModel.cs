@@ -14,8 +14,12 @@ public sealed class MainViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(catalog);
 
         Sources = new ChecklistViewModel(catalog.Sources);
+        Events = new ChecklistViewModel(catalog.Events);
     }
 
     /// <summary>The "Risk sources" tab (stage 1.1).</summary>
     public ChecklistViewModel Sources { get; }
+
+    /// <summary>The "Risk events" tab (stage 1.2).</summary>
+    public ChecklistViewModel Events { get; }
 }
