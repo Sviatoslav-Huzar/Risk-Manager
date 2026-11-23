@@ -7,32 +7,37 @@ using RiskManager.Core.Domain;
 namespace RiskManager.App.ViewModels;
 
 /// <summary>
-/// The "Risk sources" tab (stage 1.1): 18 check boxes grouped by category
-/// and the live result of formulas (5.2)-(5.3).
+/// An identification checklist: the "Risk sources" tab (stage 1.1, formulas
+/// 5.2-5.3) or the "Risk events" tab (stage 1.2, formula 5.4). Check boxes
+/// are grouped by category and the shares are recalculated on every change.
 /// </summary>
-public partial class SourcesViewModel : ObservableObject
+public partial class ChecklistViewModel : ObservableObject
 {
-    private readonly IReadOnlyList<RiskSource> _sources;
+    private readonly IReadOnlyList<ICategorizedItem> _catalogItems;
 
-    public SourcesViewModel(IReadOnlyList<RiskSource> sources)
+    /// <param name="catalogItems">
+    /// Sources or events. IReadOnlyList is covariant (out T), so
+    /// IReadOnlyList&lt;RiskSource&gt; can be passed here without conversion.
+    /// </param>
+    public ChecklistViewModel(IReadOnlyList<ICategorizedItem> catalogItems)
     {
-        ArgumentNullException.ThrowIfNull(sources);
-        _sources = sources;
+        ArgumentNullException.ThrowIfNull(catalogItems);
+        _catalogItems = catalogItems;
 
-        Items = sources
-            .Select(source => new SourceItemViewModel(source))
+        Items = catalogItems
+            .Select(item => new ChecklistItemViewModel(item))
             .ToList();
 
         // Enum.GetValues keeps the methodology order (t, c, p, m) and creates
         // a group for every category — the same approach as in Identification.
         Groups = Enum.GetValues<RiskCategory>()
-            .Select(category => new SourceGroupViewModel(
+            .Select(category => new ChecklistGroupViewModel(
                 category,
                 Items.Where(item => item.Category == category).ToList()))
             .ToList();
 
-        // Every check box reports its changes; the tab reacts by recalculating.
-        foreach (SourceItemViewModel item in Items)
+        // Every check box reports its changes; the checklist reacts by recalculating.
+        foreach (ChecklistItemViewModel item in Items)
         {
             item.PropertyChanged += OnItemPropertyChanged;
         }
@@ -40,11 +45,11 @@ public partial class SourcesViewModel : ObservableObject
         Recalculate();
     }
 
-    /// <summary>All sources in catalog order.</summary>
-    public IReadOnlyList<SourceItemViewModel> Items { get; }
+    /// <summary>All items in catalog order.</summary>
+    public IReadOnlyList<ChecklistItemViewModel> Items { get; }
 
     /// <summary>The four category blocks.</summary>
-    public IReadOnlyList<SourceGroupViewModel> Groups { get; }
+    public IReadOnlyList<ChecklistGroupViewModel> Groups { get; }
 
     /// <summary>R = tc + cc + pc + mc (formula 5.3).</summary>
     [ObservableProperty]
@@ -53,9 +58,9 @@ public partial class SourcesViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanSelectAll))]
     private void SelectAll()
     {
-        // Each assignment triggers a recalculation (18 in total). For 18 items
-        // that is negligible, so we keep the code simple.
-        foreach (SourceItemViewModel item in Items)
+        // Each assignment triggers a recalculation (one per item). For a few
+        // dozen items that is negligible, so we keep the code simple.
+        foreach (ChecklistItemViewModel item in Items)
         {
             item.IsPresent = true;
         }
@@ -66,7 +71,7 @@ public partial class SourcesViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanClearAll))]
     private void ClearAll()
     {
-        foreach (SourceItemViewModel item in Items)
+        foreach (ChecklistItemViewModel item in Items)
         {
             item.IsPresent = false;
         }
@@ -76,7 +81,7 @@ public partial class SourcesViewModel : ObservableObject
 
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(SourceItemViewModel.IsPresent))
+        if (e.PropertyName == nameof(ChecklistItemViewModel.IsPresent))
         {
             Recalculate();
         }
@@ -93,9 +98,9 @@ public partial class SourcesViewModel : ObservableObject
             .Select(item => item.Code)
             .ToHashSet();
 
-        IdentificationResult result = Identification.Calculate(_sources, presentCodes);
+        IdentificationResult result = Identification.Calculate(_catalogItems, presentCodes);
 
-        foreach (SourceGroupViewModel group in Groups)
+        foreach (ChecklistGroupViewModel group in Groups)
         {
             group.Update(result[group.Category]);
         }
