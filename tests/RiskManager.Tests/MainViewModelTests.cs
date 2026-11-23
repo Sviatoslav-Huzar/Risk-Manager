@@ -38,6 +38,16 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public void Estimates_FollowEventsTab()
+    {
+        var vm = new MainViewModel(CatalogLoader.LoadDefault());
+
+        vm.Events.Items.Single(item => item.Code == "t1").IsPresent = true;
+
+        Assert.Equal("t1", Assert.Single(vm.Estimates.Rows).Code);
+    }
+
+    [Fact]
     public void Constructor_NullCatalog_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!));
