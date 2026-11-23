@@ -18,6 +18,8 @@ public class PrioritizationTests
         Assert.Equal(0.1, result.Min, Precision);
         Assert.Equal(0.7, result.Max, Precision);
         Assert.Equal(0.2, result.Step, Precision);
+        Assert.Equal(0.3, result.LowUpper, Precision);
+        Assert.Equal(0.5, result.MediumUpper, Precision);
 
         Assert.Equal([0.1, 0.2, 0.3], result.Low.Select(i => i.Item));
         Assert.Equal([0.4, 0.5], result.Medium.Select(i => i.Item));
