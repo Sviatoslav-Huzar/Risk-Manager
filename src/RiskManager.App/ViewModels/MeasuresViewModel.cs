@@ -46,9 +46,16 @@ public partial class MeasuresViewModel : ObservableObject
     [ObservableProperty]
     public partial RiskMeasuresViewModel? SelectedRow { get; set; }
 
-    /// <summary>How many risks have at least one measure.</summary>
+    /// <summary>
+    /// The risks that have at least one measure. Replaced after every analysis
+    /// and every marked check box, so the "Monitoring" tab follows only this list.
+    /// </summary>
     [ObservableProperty]
-    public partial int PlannedCount { get; private set; }
+    [NotifyPropertyChangedFor(nameof(PlannedCount))]
+    public partial IReadOnlyList<RiskMeasuresViewModel> PlannedRows { get; private set; }
+
+    /// <summary>How many risks have at least one measure.</summary>
+    public int PlannedCount => PlannedRows.Count;
 
     private void OnAnalysisPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -58,7 +65,7 @@ public partial class MeasuresViewModel : ObservableObject
         }
     }
 
-    [MemberNotNull(nameof(Rows))]
+    [MemberNotNull(nameof(Rows), nameof(PlannedRows))]
     private void UpdateRows()
     {
         // While the list is being replaced, the table may change the selection
@@ -74,7 +81,7 @@ public partial class MeasuresViewModel : ObservableObject
 
         _isUpdatingRows = false;
 
-        UpdatePlannedCount();
+        UpdatePlannedRows();
     }
 
     partial void OnSelectedRowChanged(RiskMeasuresViewModel? value)
@@ -105,14 +112,15 @@ public partial class MeasuresViewModel : ObservableObject
 
     private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(RiskMeasuresViewModel.HasMeasures))
+        if (e.PropertyName == nameof(RiskMeasuresViewModel.SelectedMeasures))
         {
-            UpdatePlannedCount();
+            UpdatePlannedRows();
         }
     }
 
-    private void UpdatePlannedCount()
+    [MemberNotNull(nameof(PlannedRows))]
+    private void UpdatePlannedRows()
     {
-        PlannedCount = Rows.Count(row => row.HasMeasures);
+        PlannedRows = Rows.Where(row => row.HasMeasures).ToList();
     }
 }
