@@ -12,48 +12,20 @@ namespace RiskManager.App.Views;
 /// </summary>
 public partial class EstimatesView : UserControl
 {
-    private DataGridCellInfo? _lastEditedCell;
-
     public EstimatesView()
     {
         InitializeComponent();
         AddExpertColumns();
 
-        Table.PreparingCellForEdit += (_, e) =>
-            _lastEditedCell = new DataGridCellInfo(e.Row.Item, e.Column);
-
+        // The rows change on another tab, so leaving this one is enough.
+        var editGuard = new DataGridEditGuard(Table);
         IsVisibleChanged += (_, _) =>
         {
             if (!IsVisible)
             {
-                FinishEditing();
+                editGuard.FinishEditing();
             }
         };
-    }
-
-    /// <summary>
-    /// Ends editing when the user leaves the tab. A cell with text that is not
-    /// a number ("abc") cannot be committed; if its row then disappeared, the
-    /// DataGrid would stay in that state and refuse to edit any other cell.
-    /// </summary>
-    private void FinishEditing()
-    {
-        if (_lastEditedCell is not DataGridCellInfo cell)
-        {
-            return;
-        }
-
-        _lastEditedCell = null;
-
-        // CommitEdit and CancelEdit work with the current cell, which may be
-        // another one if the user has clicked elsewhere.
-        Table.CurrentCell = cell;
-
-        if (!Table.CommitEdit(DataGridEditingUnit.Row, exitEditingMode: true))
-        {
-            Table.CancelEdit(DataGridEditingUnit.Cell);
-            Table.CancelEdit(DataGridEditingUnit.Row);
-        }
     }
 
     private void AddExpertColumns()

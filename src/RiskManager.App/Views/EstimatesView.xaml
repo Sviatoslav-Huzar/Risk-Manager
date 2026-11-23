@@ -8,20 +8,6 @@
              d:DataContext="{d:DesignInstance Type=vm:EstimatesViewModel, IsDesignTimeCreatable=False}"
              d:DesignWidth="1050" d:DesignHeight="600">
 
-    <UserControl.Resources>
-        <!-- A NumberCell (see Resources/TableStyles.xaml) while it is being edited. -->
-        <Style x:Key="NumberEditor" TargetType="TextBox"
-               BasedOn="{x:Static DataGridTextColumn.DefaultEditingElementStyle}">
-            <Setter Property="TextAlignment" Value="Right" />
-            <Style.Triggers>
-                <Trigger Property="Validation.HasError" Value="True">
-                    <Setter Property="ToolTip"
-                            Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-    </UserControl.Resources>
-
     <Grid Margin="12">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
