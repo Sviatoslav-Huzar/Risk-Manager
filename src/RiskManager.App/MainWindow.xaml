@@ -10,13 +10,6 @@
         Title="Управління ризиками розроблення ПЗ" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen">
 
-    <Window.Resources>
-        <!-- One style for all tabs that are not implemented yet. -->
-        <Style x:Key="PlaceholderText" TargetType="TextBlock" BasedOn="{StaticResource HintText}">
-            <Setter Property="Text" Value="Буде реалізовано в наступних ітераціях" />
-        </Style>
-    </Window.Resources>
-
     <!-- The window's DataContext is MainViewModel (set in App.OnStartup);
          every tab picks its own part of it. -->
     <TabControl Margin="8">
@@ -47,6 +40,10 @@
 
         <TabItem Header="Моніторинг">
             <views:MonitoringView DataContext="{Binding Monitoring}" />
+        </TabItem>
+
+        <TabItem Header="Графіки">
+            <views:ChartsView DataContext="{Binding Charts}" />
         </TabItem>
     </TabControl>
 </Window>

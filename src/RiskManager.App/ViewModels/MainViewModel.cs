@@ -5,7 +5,7 @@ namespace RiskManager.App.ViewModels;
 
 /// <summary>
 /// The view model of the main window — the root of the view model tree.
-/// Holds one view model per tab; more tabs will be added in later iterations.
+/// Holds one view model per tab.
 /// </summary>
 public sealed class MainViewModel : ObservableObject
 {
@@ -23,6 +23,7 @@ public sealed class MainViewModel : ObservableObject
         Analysis = new AnalysisViewModel(Estimates);
         Measures = new MeasuresViewModel(Analysis, catalog.Measures);
         Monitoring = new MonitoringViewModel(Measures);
+        Charts = new ChartsViewModel(Analysis, Monitoring);
     }
 
     /// <summary>The "Risk sources" tab (stage 1.1).</summary>
@@ -42,4 +43,7 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>The "Monitoring" tab (stage 4).</summary>
     public MonitoringViewModel Monitoring { get; }
+
+    /// <summary>The "Charts" tab.</summary>
+    public ChartsViewModel Charts { get; }
 }
