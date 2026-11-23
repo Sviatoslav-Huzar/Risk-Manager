@@ -13,9 +13,20 @@ public sealed class MainViewModel : ObservableObject
     {
         ArgumentNullException.ThrowIfNull(catalog);
 
-        Sources = new SourcesViewModel(catalog.Sources);
+        Sources = new ChecklistViewModel(catalog.Sources);
+        Events = new ChecklistViewModel(catalog.Events);
+
+        // The only place where tabs are connected: the estimates follow the
+        // events, but know nothing about MainViewModel or other tabs.
+        Estimates = new EstimatesViewModel(Events);
     }
 
     /// <summary>The "Risk sources" tab (stage 1.1).</summary>
-    public SourcesViewModel Sources { get; }
+    public ChecklistViewModel Sources { get; }
+
+    /// <summary>The "Risk events" tab (stage 1.2).</summary>
+    public ChecklistViewModel Events { get; }
+
+    /// <summary>The "Expert estimates" tab (stages 2.1-2.3).</summary>
+    public EstimatesViewModel Estimates { get; }
 }

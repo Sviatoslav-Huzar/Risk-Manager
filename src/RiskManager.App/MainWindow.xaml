@@ -26,16 +26,19 @@
     <TabControl Margin="8">
         <TabItem Header="Джерела ризиків">
             <!-- Sources is a property of MainViewModel: from here on down
-                 the DataContext is SourcesViewModel. -->
-            <views:SourcesView DataContext="{Binding Sources}" />
+                 the DataContext is ChecklistViewModel. -->
+            <views:ChecklistView DataContext="{Binding Sources}"
+                                 Instruction="Етап 1.1. Позначте джерела ризиків, які наявні у вашому програмному проєкті." />
         </TabItem>
 
+        <!-- The same control, another part of MainViewModel and another text. -->
         <TabItem Header="Ризикові події">
-            <TextBlock Style="{StaticResource PlaceholderText}" />
+            <views:ChecklistView DataContext="{Binding Events}"
+                                 Instruction="Етап 1.2. Позначте ризикові події, які можуть настати у вашому програмному проєкті." />
         </TabItem>
 
         <TabItem Header="Експертні оцінки">
-            <TextBlock Style="{StaticResource PlaceholderText}" />
+            <views:EstimatesView DataContext="{Binding Estimates}" />
         </TabItem>
 
         <TabItem Header="Аналіз">

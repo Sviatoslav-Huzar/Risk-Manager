@@ -4,11 +4,11 @@ using RiskManager.Core.Domain;
 
 namespace RiskManager.Tests;
 
-public class SourcesViewModelTests
+public class ChecklistViewModelTests
 {
     private const int Precision = 10;
 
-    private readonly SourcesViewModel _vm = new(CatalogLoader.LoadDefault().Sources);
+    private readonly ChecklistViewModel _vm = new(CatalogLoader.LoadDefault().Sources);
 
     [Fact]
     public void InitialState_NothingSelected()
@@ -35,7 +35,7 @@ public class SourcesViewModelTests
 
         Assert.Equal(1.0 / 18, _vm.Total, Precision);
 
-        SourceGroupViewModel technical = Group(RiskCategory.Technical);
+        ChecklistGroupViewModel technical = Group(RiskCategory.Technical);
         Assert.Equal(1, technical.PresentCount);
         Assert.Equal(1.0 / 18, technical.Share, Precision);
 
@@ -57,16 +57,16 @@ public class SourcesViewModelTests
     {
         // This is the event WPF bindings listen to: without it the screen
         // would keep showing the old value even though the property changed.
-        Assert.PropertyChanged(_vm, nameof(SourcesViewModel.Total),
+        Assert.PropertyChanged(_vm, nameof(ChecklistViewModel.Total),
             () => Item("m3").IsPresent = true);
     }
 
     [Fact]
     public void CheckingSource_RaisesPropertyChangedForGroupShare()
     {
-        SourceGroupViewModel management = Group(RiskCategory.Management);
+        ChecklistGroupViewModel management = Group(RiskCategory.Management);
 
-        Assert.PropertyChanged(management, nameof(SourceGroupViewModel.Share),
+        Assert.PropertyChanged(management, nameof(ChecklistGroupViewModel.Share),
             () => Item("m3").IsPresent = true);
     }
 
@@ -120,9 +120,9 @@ public class SourcesViewModelTests
         Assert.True(raised);
     }
 
-    private SourceItemViewModel Item(string code) =>
+    private ChecklistItemViewModel Item(string code) =>
         _vm.Items.Single(item => item.Code == code);
 
-    private SourceGroupViewModel Group(RiskCategory category) =>
+    private ChecklistGroupViewModel Group(RiskCategory category) =>
         _vm.Groups.Single(group => group.Category == category);
 }
