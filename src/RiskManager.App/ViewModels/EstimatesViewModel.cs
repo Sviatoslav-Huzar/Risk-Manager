@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -17,10 +18,15 @@ public partial class EstimatesViewModel : ObservableObject
     // unchecking an event hides its row but keeps the entered numbers.
     private readonly Dictionary<ChecklistItemViewModel, EstimateRowViewModel> _rowsByItem = [];
 
-    public EstimatesViewModel(ChecklistViewModel events)
+    private readonly Random _random;
+
+    /// <param name="events">The checklist of the "Risk events" tab.</param>
+    /// <param name="random">Tests pass a seeded generator to get repeatable numbers.</param>
+    public EstimatesViewModel(ChecklistViewModel events, Random? random = null)
     {
         ArgumentNullException.ThrowIfNull(events);
         _events = events;
+        _random = random ?? Random.Shared;
 
         foreach (ChecklistItemViewModel item in events.Items)
         {
@@ -50,6 +56,18 @@ public partial class EstimatesViewModel : ObservableObject
     [ObservableProperty]
     public partial int CompleteCount { get; private set; }
 
+    /// <summary>Fills the empty cells of the visible rows with demonstration data.</summary>
+    [RelayCommand(CanExecute = nameof(CanFillRandom))]
+    private void FillRandom()
+    {
+        foreach (EstimateRowViewModel row in Rows)
+        {
+            row.FillEmpty(_random);
+        }
+    }
+
+    private bool CanFillRandom() => Rows.Any(row => !row.IsComplete);
+
     private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName != nameof(ChecklistItemViewModel.IsPresent)
@@ -75,19 +93,20 @@ public partial class EstimatesViewModel : ObservableObject
             Rows.Remove(row);
         }
 
-        UpdateCompleteCount();
+        UpdateSummary();
     }
 
     private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(EstimateRowViewModel.IsComplete))
         {
-            UpdateCompleteCount();
+            UpdateSummary();
         }
     }
 
-    private void UpdateCompleteCount()
+    private void UpdateSummary()
     {
         CompleteCount = Rows.Count(row => row.IsComplete);
+        FillRandomCommand.NotifyCanExecuteChanged();
     }
 }

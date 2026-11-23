@@ -69,6 +69,27 @@ public partial class EstimateRowViewModel : ObservableValidator
 
     public ProbabilityLevel? ProbabilityLevel => Assessment?.ProbabilityLevel;
 
+    /// <summary>
+    /// Fills only the empty cells with plausible numbers; entered values stay.
+    /// The experts' estimates are scattered around one common probability:
+    /// with independent numbers er would almost always end up near 0.5.
+    /// </summary>
+    internal void FillEmpty(Random random)
+    {
+        const double maxDeviation = 0.1;
+        double commonProbability = random.NextDouble();
+
+        foreach (ExpertEstimateViewModel estimate in Estimates)
+        {
+            double deviation = (random.NextDouble() * 2 - 1) * maxDeviation;
+            double value = Math.Round(Math.Clamp(commonProbability + deviation, 0, 1), 2);
+
+            estimate.Value ??= value;
+        }
+
+        Loss ??= Math.Round(random.NextDouble(), 2);
+    }
+
     private void OnEstimatePropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(ExpertEstimateViewModel.Value))

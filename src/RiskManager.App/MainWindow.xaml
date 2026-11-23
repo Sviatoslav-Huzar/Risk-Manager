@@ -38,7 +38,7 @@
         </TabItem>
 
         <TabItem Header="Експертні оцінки">
-            <TextBlock Style="{StaticResource PlaceholderText}" />
+            <views:EstimatesView DataContext="{Binding Estimates}" />
         </TabItem>
 
         <TabItem Header="Аналіз">

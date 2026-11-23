@@ -8,5 +8,7 @@
              through {StaticResource Key}. -->
         <conv:CategoryNameConverter x:Key="CategoryNameConverter" />
         <conv:CategorySymbolConverter x:Key="CategorySymbolConverter" />
+        <conv:NullableNumberConverter x:Key="NullableNumberConverter" />
+        <conv:ProbabilityLevelConverter x:Key="ProbabilityLevelConverter" />
     </Application.Resources>
 </Application>
