@@ -36,10 +36,12 @@ public static class Prioritization
 
         double min = valued.Min(v => v.Value);
         double max = valued.Max(v => v.Value);
-        double step = (max - min) / 3;
 
-        double lowUpper = Guard.Normalize(min + step);
-        double mediumUpper = Guard.Normalize(min + 2 * step);
+        // The result owns the formulas of the bounds, so the bounds shown to the
+        // user are always the ones that were applied.
+        var bounds = new PrioritizationResult<T>([], min, max);
+        double lowUpper = Guard.Normalize(bounds.LowUpper);
+        double mediumUpper = Guard.Normalize(bounds.MediumUpper);
 
         List<PrioritizedItem<T>> prioritized = valued
             .Select(v =>
@@ -54,7 +56,7 @@ public static class Prioritization
             })
             .ToList();
 
-        return new PrioritizationResult<T>(prioritized, min, max);
+        return bounds with { Items = prioritized };
     }
 }
 
@@ -69,6 +71,12 @@ public sealed record PrioritizationResult<T>(
 {
     /// <summary>mpr — width of one priority interval.</summary>
     public double Step => (Max - Min) / 3;
+
+    /// <summary>min + mpr — the upper bound of the Low interval.</summary>
+    public double LowUpper => Min + Step;
+
+    /// <summary>min + 2mpr — the upper bound of the Medium interval.</summary>
+    public double MediumUpper => Min + 2 * Step;
 
     /// <summary>Set HER — first-order risks.</summary>
     public IReadOnlyList<PrioritizedItem<T>> High => ByPriority(PriorityLevel.High);

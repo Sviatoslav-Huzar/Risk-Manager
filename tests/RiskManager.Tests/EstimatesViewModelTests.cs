@@ -92,6 +92,32 @@ public class EstimatesViewModelTests
     }
 
     [Fact]
+    public void Assessments_ContainOnlyVisibleCompleteRowsInCatalogOrder()
+    {
+        Check("m1");
+        Check("t1");
+        Check("c2");
+        FillCompletely(_vm.Rows[2]);
+        FillCompletely(_vm.Rows[0]);
+        Assert.Equal(["t1", "m1"], _vm.Assessments.Select(risk => risk.Event.Code));
+
+        Uncheck("t1");
+        Assert.Equal(["m1"], _vm.Assessments.Select(risk => risk.Event.Code));
+    }
+
+    [Fact]
+    public void Assessments_FollowChangesOfRowThatStaysComplete()
+    {
+        Check("t1");
+        FillCompletely(_vm.Rows[0]);
+
+        Assert.PropertyChanged(_vm, nameof(EstimatesViewModel.Assessments),
+            () => _vm.Rows[0].Loss = 0.2);
+
+        Assert.Equal(0.1, Assert.Single(_vm.Assessments).Value, 10);
+    }
+
+    [Fact]
     public void FillRandom_CompletesAllVisibleRowsWithValidValues()
     {
         _events.SelectAllCommand.Execute(null);

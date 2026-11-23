@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using RiskManager.Core.Calculations;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -44,6 +45,9 @@ public partial class EstimatesViewModel : ObservableObject
 
             item.PropertyChanged += OnItemPropertyChanged;
         }
+
+        // New rows are empty, so there is nothing to assess yet.
+        Assessments = [];
     }
 
     /// <summary>
@@ -52,9 +56,17 @@ public partial class EstimatesViewModel : ObservableObject
     /// </summary>
     public ObservableCollection<EstimateRowViewModel> Rows { get; } = [];
 
-    /// <summary>How many of the visible rows are filled in completely.</summary>
+    /// <summary>
+    /// The results of the visible complete rows in catalog order. Other tabs
+    /// need only this list: every change replaces it with a new one, so they do
+    /// not have to follow the individual rows and cells.
+    /// </summary>
     [ObservableProperty]
-    public partial int CompleteCount { get; private set; }
+    [NotifyPropertyChangedFor(nameof(CompleteCount))]
+    public partial IReadOnlyList<RiskAssessment> Assessments { get; private set; }
+
+    /// <summary>How many of the visible rows are filled in completely.</summary>
+    public int CompleteCount => Assessments.Count;
 
     /// <summary>Fills the empty cells of the visible rows with demonstration data.</summary>
     [RelayCommand(CanExecute = nameof(CanFillRandom))]
@@ -98,7 +110,7 @@ public partial class EstimatesViewModel : ObservableObject
 
     private void OnRowPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(EstimateRowViewModel.IsComplete))
+        if (e.PropertyName == nameof(EstimateRowViewModel.Assessment))
         {
             UpdateSummary();
         }
@@ -106,7 +118,11 @@ public partial class EstimatesViewModel : ObservableObject
 
     private void UpdateSummary()
     {
-        CompleteCount = Rows.Count(row => row.IsComplete);
+        Assessments = Rows
+            .Select(row => row.Assessment)
+            .OfType<RiskAssessment>() // skips null, i.e. the incomplete rows
+            .ToList();
+
         FillRandomCommand.NotifyCanExecuteChanged();
     }
 }

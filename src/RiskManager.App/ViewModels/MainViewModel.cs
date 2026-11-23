@@ -16,9 +16,11 @@ public sealed class MainViewModel : ObservableObject
         Sources = new ChecklistViewModel(catalog.Sources);
         Events = new ChecklistViewModel(catalog.Events);
 
-        // The only place where tabs are connected: the estimates follow the
-        // events, but know nothing about MainViewModel or other tabs.
+        // The only place where tabs are connected. The dependencies go one way,
+        // Events -> Estimates -> Analysis -> Measures: a tab knows only its source.
         Estimates = new EstimatesViewModel(Events);
+        Analysis = new AnalysisViewModel(Estimates);
+        Measures = new MeasuresViewModel(Analysis, catalog.Measures);
     }
 
     /// <summary>The "Risk sources" tab (stage 1.1).</summary>
@@ -29,4 +31,10 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>The "Expert estimates" tab (stages 2.1-2.3).</summary>
     public EstimatesViewModel Estimates { get; }
+
+    /// <summary>The "Analysis" tab (formula 5.6 and stage 2.4).</summary>
+    public AnalysisViewModel Analysis { get; }
+
+    /// <summary>The "Measures" tab (stage 3).</summary>
+    public MeasuresViewModel Measures { get; }
 }
