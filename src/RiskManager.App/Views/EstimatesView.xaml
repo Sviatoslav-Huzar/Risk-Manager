@@ -9,20 +9,7 @@
              d:DesignWidth="1050" d:DesignHeight="600">
 
     <UserControl.Resources>
-        <!-- A cell that is being shown. -->
-        <Style x:Key="NumberCell" TargetType="TextBlock">
-            <Setter Property="TextAlignment" Value="Right" />
-            <Setter Property="Padding" Value="4,2" />
-            <Style.Triggers>
-                <!-- "/" means the current (first) item of the error collection. -->
-                <Trigger Property="Validation.HasError" Value="True">
-                    <Setter Property="ToolTip"
-                            Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <!-- The same cell while it is being edited. -->
+        <!-- A NumberCell (see Resources/TableStyles.xaml) while it is being edited. -->
         <Style x:Key="NumberEditor" TargetType="TextBox"
                BasedOn="{x:Static DataGridTextColumn.DefaultEditingElementStyle}">
             <Setter Property="TextAlignment" Value="Right" />
@@ -32,11 +19,6 @@
                             Value="{Binding RelativeSource={RelativeSource Self}, Path=(Validation.Errors)/ErrorContent}" />
                 </Trigger>
             </Style.Triggers>
-        </Style>
-
-        <Style x:Key="DescriptionCell" TargetType="TextBlock">
-            <Setter Property="TextWrapping" Value="Wrap" />
-            <Setter Property="Padding" Value="4,2" />
         </Style>
     </UserControl.Resources>
 
@@ -111,12 +93,9 @@
         </DataGrid>
 
         <TextBlock Grid.Row="1"
-                   HorizontalAlignment="Center" VerticalAlignment="Center"
-                   FontSize="16"
-                   Foreground="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"
                    Text="Спочатку позначте події на вкладці «Ризикові події»">
             <TextBlock.Style>
-                <Style TargetType="TextBlock">
+                <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
                     <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding Rows.Count}" Value="0">

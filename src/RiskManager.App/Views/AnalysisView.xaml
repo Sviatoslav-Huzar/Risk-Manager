@@ -1,0 +1,209 @@
+<UserControl x:Class="RiskManager.App.Views.AnalysisView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:RiskManager.App.ViewModels"
+             xmlns:domain="clr-namespace:RiskManager.Core.Domain;assembly=RiskManager.Core"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:AnalysisViewModel, IsDesignTimeCreatable=False}"
+             d:DesignWidth="1050" d:DesignHeight="600">
+
+    <UserControl.Resources>
+        <!-- The mean of a group without events does not exist, so its cells
+             stay empty instead of showing 0 and "very low". -->
+        <Style x:Key="GroupNumberCell" TargetType="TextBlock" BasedOn="{StaticResource NumberCell}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding EventCount}" Value="0">
+                    <Setter Property="Visibility" Value="Hidden" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="GroupTextCell" TargetType="TextBlock" BasedOn="{StaticResource DescriptionCell}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding EventCount}" Value="0">
+                    <Setter Property="Visibility" Value="Hidden" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock DockPanel.Dock="Right" Margin="16,0,0,0" FontWeight="SemiBold" Foreground="#B45309"
+                       Text="{Binding MissingCount, StringFormat='Не враховано подій з неповними оцінками: {0}'}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding MissingCount}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <TextBlock TextWrapping="Wrap"
+                       Text="Етап 2.4. Ризики впорядковано за величиною vr; пріоритет визначає інтервал, у який вона потрапляє." />
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Risks.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Left: the ranked risks. In a narrow window a DataGrid with a star
+                 column squeezes the other columns too; MinWidth prevents it. -->
+            <DataGrid Grid.Column="0" Style="{StaticResource ReadOnlyTable}" ItemsSource="{Binding Risks}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="№" Width="35" MinWidth="35" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Rank, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Код" Width="45" MinWidth="45" ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding Risk.Event.Code, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Ризикова подія" Width="*" MinWidth="150"
+                                        ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding Risk.Event.Description, Mode=OneWay}" />
+                    <DataGridTextColumn Header="er" Width="50" MinWidth="50" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Risk.Probability, Mode=OneWay, StringFormat=N3}" />
+                    <DataGridTextColumn Header="lr" Width="50" MinWidth="50" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Risk.Loss, Mode=OneWay, StringFormat=N3}" />
+                    <DataGridTextColumn Header="vr" Width="50" MinWidth="50" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Risk.Value, Mode=OneWay, StringFormat=N3}" />
+
+                    <!-- The content is a PriorityLevel; WPF finds the template for
+                         this type in App.xaml. -->
+                    <DataGridTemplateColumn Header="Пріоритет" Width="85" MinWidth="85">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding Priority}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Right: the groups and the priority intervals. -->
+            <ScrollViewer Grid.Column="1" Margin="12,0,0,0" VerticalScrollBarVisibility="Auto">
+                <StackPanel Width="430">
+                    <TextBlock Margin="0,0,0,6" FontSize="14" FontWeight="SemiBold"
+                               Text="Імовірності за групами ризиків (формула 5.6)" />
+
+                    <DataGrid Style="{StaticResource ReadOnlyTable}" ItemsSource="{Binding Groups}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Група" Width="*" ElementStyle="{StaticResource DescriptionCell}"
+                                                Binding="{Binding Category, Mode=OneWay, Converter={StaticResource CategoryNameConverter}}" />
+                            <!-- tc is the symbol of stage 1, ptc the one of stage 2. -->
+                            <DataGridTextColumn Header="" Width="40" ElementStyle="{StaticResource DescriptionCell}"
+                                                Binding="{Binding Category, Mode=OneWay, Converter={StaticResource CategorySymbolConverter}, StringFormat=p{0}}" />
+                            <DataGridTextColumn Header="Подій" Width="50" ElementStyle="{StaticResource NumberCell}"
+                                                Binding="{Binding EventCount, Mode=OneWay}" />
+                            <DataGridTextColumn Header="Частка" Width="65" ElementStyle="{StaticResource NumberCell}"
+                                                Binding="{Binding Share, Mode=OneWay, StringFormat=P2}" />
+                            <DataGridTextColumn Header="Середнє er" Width="75" ElementStyle="{StaticResource GroupNumberCell}"
+                                                Binding="{Binding Mean, Mode=OneWay, StringFormat=N3}" />
+                            <DataGridTextColumn Header="Ймовірність" Width="90" ElementStyle="{StaticResource GroupTextCell}"
+                                                Binding="{Binding MeanLevel, Mode=OneWay, Converter={StaticResource ProbabilityLevelConverter}}" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Margin="0,20,0,6" FontSize="14" FontWeight="SemiBold"
+                               Text="Інтервали пріоритетів (формула 5.11)" />
+
+                    <TextBlock Margin="0,0,0,8">
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="min = {0:N3};  max = {1:N3};  mpr = {2:N3}">
+                                <Binding Path="Priorities.Min" Mode="OneWay" />
+                                <Binding Path="Priorities.Max" Mode="OneWay" />
+                                <Binding Path="Priorities.Step" Mode="OneWay" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+
+                    <Grid>
+                        <Grid.Resources>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Margin" Value="12,3,0,3" />
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </Grid.Resources>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="85" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition />
+                            <RowDefinition />
+                            <RowDefinition />
+                        </Grid.RowDefinitions>
+
+                        <ContentPresenter Grid.Row="0" Content="{x:Static domain:PriorityLevel.High}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="({0:N3}; {1:N3}]">
+                                    <Binding Path="Priorities.MediumUpper" Mode="OneWay" />
+                                    <Binding Path="Priorities.Max" Mode="OneWay" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock Grid.Row="0" Grid.Column="2"
+                                   Text="{Binding Priorities.High.Count, Mode=OneWay, StringFormat='HER: {0}'}" />
+
+                        <ContentPresenter Grid.Row="1" Content="{x:Static domain:PriorityLevel.Medium}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="({0:N3}; {1:N3}]">
+                                    <Binding Path="Priorities.LowUpper" Mode="OneWay" />
+                                    <Binding Path="Priorities.MediumUpper" Mode="OneWay" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock Grid.Row="1" Grid.Column="2"
+                                   Text="{Binding Priorities.Medium.Count, Mode=OneWay, StringFormat='MER: {0}'}" />
+
+                        <ContentPresenter Grid.Row="2" Content="{x:Static domain:PriorityLevel.Low}" />
+                        <TextBlock Grid.Row="2" Grid.Column="1">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="[{0:N3}; {1:N3}]">
+                                    <Binding Path="Priorities.Min" Mode="OneWay" />
+                                    <Binding Path="Priorities.LowUpper" Mode="OneWay" />
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                        <TextBlock Grid.Row="2" Grid.Column="2"
+                                   Text="{Binding Priorities.Low.Count, Mode=OneWay, StringFormat='LER: {0}'}" />
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+
+        <TextBlock Grid.Row="1" Text="Спочатку заповніть оцінки на вкладці «Експертні оцінки»">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Risks.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
+</UserControl>
