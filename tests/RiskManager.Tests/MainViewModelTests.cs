@@ -59,6 +59,19 @@ public class MainViewModelTests
     }
 
     [Fact]
+    public void Measures_FollowAnalysisTab()
+    {
+        var vm = new MainViewModel(CatalogLoader.LoadDefault());
+        vm.Events.Items.Single(item => item.Code == "t1").IsPresent = true;
+
+        vm.Estimates.FillRandomCommand.Execute(null);
+
+        RiskMeasuresViewModel row = Assert.Single(vm.Measures.Rows);
+        Assert.Equal("t1", row.Ranked.Risk.Event.Code);
+        Assert.Equal(19, row.Items.Count);
+    }
+
+    [Fact]
     public void Constructor_NullCatalog_Throws()
     {
         Assert.Throws<ArgumentNullException>(() => new MainViewModel(null!));
