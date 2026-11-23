@@ -1,0 +1,114 @@
+<UserControl x:Class="RiskManager.App.Views.MeasuresView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:RiskManager.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:MeasuresViewModel, IsDesignTimeCreatable=False}"
+             d:DesignWidth="1050" d:DesignHeight="600">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock DockPanel.Dock="Right" Margin="16,0,0,0">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="Заходи визначено для {0} з {1}">
+                        <Binding Path="PlannedCount" Mode="OneWay" />
+                        <Binding Path="Rows.Count" Mode="OneWay" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+
+            <TextBlock TextWrapping="Wrap"
+                       Text="Етап 3. Оберіть ризик ліворуч і позначте заходи, які можуть його зменшити або усунути. Найкращий із них визначається на етапі моніторингу." />
+        </DockPanel>
+
+        <!-- Master-detail: the table sets SelectedRow, the panel shows it. -->
+        <Grid Grid.Row="1">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Rows.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- The master. -->
+            <DataGrid Grid.Column="0" Style="{StaticResource ReadOnlyTable}"
+                      SelectionMode="Single"
+                      ItemsSource="{Binding Rows}"
+                      SelectedItem="{Binding SelectedRow}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="№" Width="35" MinWidth="35" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Ranked.Rank, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Код" Width="45" MinWidth="45" ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding Ranked.Risk.Event.Code, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Ризикова подія" Width="*" MinWidth="150"
+                                        ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding Ranked.Risk.Event.Description, Mode=OneWay}" />
+                    <DataGridTextColumn Header="vr" Width="50" MinWidth="50" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Ranked.Risk.Value, Mode=OneWay, StringFormat=N3}" />
+                    <DataGridTemplateColumn Header="Пріоритет" Width="85" MinWidth="85">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding Ranked.Priority}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Заходи" Width="110" MinWidth="110" ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding SelectedCodes, Mode=OneWay}" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- The detail. -->
+            <DockPanel Grid.Column="1" Margin="12,0,0,0">
+                <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap">
+                    <Run Text="{Binding SelectedRow.Ranked.Risk.Event.Code, Mode=OneWay}" />
+                    <Run Text=" — " />
+                    <Run Text="{Binding SelectedRow.Ranked.Risk.Event.Description, Mode=OneWay}" />
+                </TextBlock>
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ItemsControl ItemsSource="{Binding SelectedRow.Items}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:MeasureItemViewModel}">
+                                <CheckBox Margin="0,3" IsChecked="{Binding IsSelected}">
+                                    <TextBlock TextWrapping="Wrap">
+                                        <Run FontWeight="SemiBold" Text="{Binding Code, Mode=OneWay}" />
+                                        <Run Text=" — " />
+                                        <Run Text="{Binding Description, Mode=OneWay}" />
+                                    </TextBlock>
+                                </CheckBox>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </DockPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="1" Text="Спочатку заповніть оцінки на вкладці «Експертні оцінки»">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Rows.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
+</UserControl>

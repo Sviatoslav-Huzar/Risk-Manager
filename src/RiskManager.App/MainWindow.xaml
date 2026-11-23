@@ -42,7 +42,7 @@
         </TabItem>
 
         <TabItem Header="Заходи">
-            <TextBlock Style="{StaticResource PlaceholderText}" />
+            <views:MeasuresView DataContext="{Binding Measures}" />
         </TabItem>
 
         <TabItem Header="Моніторинг">
