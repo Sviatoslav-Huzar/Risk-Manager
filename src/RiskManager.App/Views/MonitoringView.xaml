@@ -1,0 +1,214 @@
+<UserControl x:Class="RiskManager.App.Views.MonitoringView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:RiskManager.App.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:MonitoringViewModel, IsDesignTimeCreatable=False}"
+             d:DesignWidth="1050" d:DesignHeight="600">
+
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <DockPanel Grid.Row="0" Margin="0,0,0,10">
+            <Button DockPanel.Dock="Right" Padding="12,4" VerticalAlignment="Top"
+                    Content="Заповнити випадково"
+                    ToolTip="Заповнює лише порожні клітинки змодельованими значеннями"
+                    Command="{Binding FillRandomCommand}" />
+
+            <TextBlock DockPanel.Dock="Right" Margin="16,0" VerticalAlignment="Center"
+                       FontWeight="SemiBold" Foreground="#B45309"
+                       Text="{Binding MissingCount, StringFormat='Ризиків без результату: {0}'}">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding MissingCount}" Value="0">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+
+            <TextBlock VerticalAlignment="Center" TextWrapping="Wrap"
+                       Text="Етап 4. Оцініть ймовірність epr і збитки elr після застосування кожного заходу (від 0 до 1). Найкращим є захід з найменшою величиною evr." />
+        </DockPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Rows.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
+
+            <!-- The risks: before and after. -->
+            <DataGrid Grid.Column="0" Style="{StaticResource ReadOnlyTable}"
+                      SelectionMode="Single"
+                      ItemsSource="{Binding Rows}"
+                      SelectedItem="{Binding SelectedRow}">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Код" Width="42" MinWidth="42" ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding Ranked.Risk.Event.Code, Mode=OneWay}" />
+                    <DataGridTextColumn Header="Ризикова подія" Width="*" MinWidth="130"
+                                        ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding Ranked.Risk.Event.Description, Mode=OneWay}" />
+                    <DataGridTextColumn Header="vr" Width="46" MinWidth="46" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding Ranked.Risk.Value, Mode=OneWay, StringFormat=N3}" />
+                    <DataGridTemplateColumn Header="До" Width="78" MinWidth="78">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding Ranked.Priority}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="Захід" Width="48" MinWidth="48" ElementStyle="{StaticResource DescriptionCell}"
+                                        Binding="{Binding BestCode, Mode=OneWay}" />
+                    <DataGridTextColumn Header="evr" Width="46" MinWidth="46" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding ValueAfter, Mode=OneWay, StringFormat=N3}" />
+                    <DataGridTextColumn Header="Зниження" Width="66" MinWidth="66" ElementStyle="{StaticResource NumberCell}"
+                                        Binding="{Binding ReductionRatio, Mode=OneWay, StringFormat=P1}" />
+                    <!-- PriorityAfter is null until the risk is evaluated: the cell is empty. -->
+                    <DataGridTemplateColumn Header="Після" Width="78" MinWidth="78">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <ContentPresenter Content="{Binding PriorityAfter}" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- The candidates of the selected risk. -->
+            <DockPanel Grid.Column="1" Margin="12,0,0,0">
+                <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap">
+                    <Run Text="{Binding SelectedRow.Ranked.Risk.Event.Code, Mode=OneWay}" />
+                    <Run Text=" — " />
+                    <Run Text="{Binding SelectedRow.Ranked.Risk.Event.Description, Mode=OneWay}" />
+                </TextBlock>
+
+                <TextBlock DockPanel.Dock="Top" Margin="0,0,0,8">
+                    <TextBlock.Text>
+                        <MultiBinding StringFormat="До заходів: er = {0:N3};  lr = {1:N3};  vr = {2:N3}">
+                            <Binding Path="SelectedRow.Ranked.Risk.Probability" Mode="OneWay" />
+                            <Binding Path="SelectedRow.Ranked.Risk.Loss" Mode="OneWay" />
+                            <Binding Path="SelectedRow.Ranked.Risk.Value" Mode="OneWay" />
+                        </MultiBinding>
+                    </TextBlock.Text>
+                </TextBlock>
+
+                <DataGrid x:Name="EvaluationTable"
+                          ItemsSource="{Binding SelectedRow.Evaluations}"
+                          AutoGenerateColumns="False"
+                          CanUserAddRows="False"
+                          CanUserDeleteRows="False"
+                          CanUserSortColumns="False"
+                          CanUserReorderColumns="False"
+                          CanUserResizeRows="False"
+                          HeadersVisibility="Column"
+                          SelectionUnit="Cell">
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsBest}" Value="True">
+                                    <Setter Property="FontWeight" Value="SemiBold" />
+                                    <Setter Property="Background" Value="#E8F5EB" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGrid.RowStyle>
+
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Код" Width="42" MinWidth="42" IsReadOnly="True"
+                                            ElementStyle="{StaticResource DescriptionCell}"
+                                            Binding="{Binding Code, Mode=OneWay}" />
+                        <DataGridTextColumn Header="Захід" Width="*" MinWidth="110" IsReadOnly="True"
+                                            ElementStyle="{StaticResource DescriptionCell}"
+                                            Binding="{Binding Description, Mode=OneWay}" />
+                        <DataGridTextColumn Header="epr" Width="50" MinWidth="50"
+                                            ElementStyle="{StaticResource NumberCell}"
+                                            EditingElementStyle="{StaticResource NumberEditor}"
+                                            Binding="{Binding Probability, Converter={StaticResource NullableNumberConverter}, UpdateSourceTrigger=LostFocus}" />
+                        <DataGridTextColumn Header="elr" Width="50" MinWidth="50"
+                                            ElementStyle="{StaticResource NumberCell}"
+                                            EditingElementStyle="{StaticResource NumberEditor}"
+                                            Binding="{Binding Loss, Converter={StaticResource NullableNumberConverter}, UpdateSourceTrigger=LostFocus}" />
+                        <DataGridTextColumn Header="evr" Width="50" MinWidth="50" IsReadOnly="True"
+                                            ElementStyle="{StaticResource NumberCell}"
+                                            Binding="{Binding Value, Mode=OneWay, StringFormat=N3}" />
+                        <!-- The best measure is marked by a sign too, not only by color. -->
+                        <DataGridTemplateColumn Header="" Width="28" MinWidth="28" IsReadOnly="True">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="✓" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               ToolTip="Найкращий захід">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Hidden" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsBest}" Value="True">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+            </DockPanel>
+        </Grid>
+
+        <!-- The effect of all measures together. -->
+        <TextBlock Grid.Row="2" Margin="0,10,0,0">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding CompleteCount}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+            <TextBlock.Text>
+                <MultiBinding StringFormat="Оцінено ризиків: {0}.  Сумарна величина: {1:N3} → {2:N3} (зниження {3:P1}).  Нові межі: min = {4:N3};  max = {5:N3};  mpr = {6:N3}">
+                    <Binding Path="CompleteCount" Mode="OneWay" />
+                    <Binding Path="TotalBefore" Mode="OneWay" />
+                    <Binding Path="TotalAfter" Mode="OneWay" />
+                    <Binding Path="TotalReductionRatio" Mode="OneWay" />
+                    <Binding Path="Results.Min" Mode="OneWay" />
+                    <Binding Path="Results.Max" Mode="OneWay" />
+                    <Binding Path="Results.Step" Mode="OneWay" />
+                </MultiBinding>
+            </TextBlock.Text>
+        </TextBlock>
+
+        <TextBlock Grid.Row="1" Text="Спочатку позначте заходи на вкладці «Заходи»">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Rows.Count}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
+</UserControl>

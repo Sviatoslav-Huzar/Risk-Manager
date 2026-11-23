@@ -46,7 +46,7 @@
         </TabItem>
 
         <TabItem Header="Моніторинг">
-            <TextBlock Style="{StaticResource PlaceholderText}" />
+            <views:MonitoringView DataContext="{Binding Monitoring}" />
         </TabItem>
     </TabControl>
 </Window>
