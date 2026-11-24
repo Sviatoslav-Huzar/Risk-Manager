@@ -19,13 +19,19 @@ public partial class ChecklistViewModel : ObservableObject
     /// Sources or events. IReadOnlyList is covariant (out T), so
     /// IReadOnlyList&lt;RiskSource&gt; can be passed here without conversion.
     /// </param>
-    public ChecklistViewModel(IReadOnlyList<ICategorizedItem> catalogItems)
+    /// <param name="presentCodes">Codes of the items that are checked from the start.</param>
+    public ChecklistViewModel(
+        IReadOnlyList<ICategorizedItem> catalogItems,
+        IReadOnlyCollection<string>? presentCodes = null)
     {
         ArgumentNullException.ThrowIfNull(catalogItems);
         _catalogItems = catalogItems;
 
         Items = catalogItems
-            .Select(item => new ChecklistItemViewModel(item))
+            .Select(item => new ChecklistItemViewModel(item)
+            {
+                IsPresent = presentCodes?.Contains(item.Code) ?? false,
+            })
             .ToList();
 
         // Enum.GetValues keeps the methodology order (t, c, p, m) and creates
@@ -50,6 +56,12 @@ public partial class ChecklistViewModel : ObservableObject
 
     /// <summary>The four category blocks.</summary>
     public IReadOnlyList<ChecklistGroupViewModel> Groups { get; }
+
+    /// <summary>Codes of the checked items in catalog order.</summary>
+    public IReadOnlyList<string> PresentCodes => Items
+        .Where(item => item.IsPresent)
+        .Select(item => item.Code)
+        .ToList();
 
     /// <summary>R = tc + cc + pc + mc (formula 5.3).</summary>
     [ObservableProperty]
@@ -93,12 +105,7 @@ public partial class ChecklistViewModel : ObservableObject
     /// </summary>
     private void Recalculate()
     {
-        HashSet<string> presentCodes = Items
-            .Where(item => item.IsPresent)
-            .Select(item => item.Code)
-            .ToHashSet();
-
-        IdentificationResult result = Identification.Calculate(_catalogItems, presentCodes);
+        IdentificationResult result = Identification.Calculate(_catalogItems, PresentCodes.ToHashSet());
 
         foreach (ChecklistGroupViewModel group in Groups)
         {

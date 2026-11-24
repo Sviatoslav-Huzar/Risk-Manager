@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RiskManager.Core.Calculations;
+using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -68,6 +69,17 @@ public partial class EstimateRowViewModel : ObservableValidator
     public double? Value => Assessment?.Value;
 
     public ProbabilityLevel? ProbabilityLevel => Assessment?.ProbabilityLevel;
+
+    /// <summary>Takes over the numbers of a project file.</summary>
+    internal void Restore(RiskData data)
+    {
+        foreach ((ExpertEstimateViewModel estimate, double? value) in Estimates.Zip(data.Estimates))
+        {
+            estimate.Value = value;
+        }
+
+        Loss = data.Loss;
+    }
 
     /// <summary>
     /// Fills only the empty cells with plausible numbers; entered values stay.

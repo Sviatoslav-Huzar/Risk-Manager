@@ -23,7 +23,7 @@ public partial class App : Application
 
         var mainWindow = new MainWindow
         {
-            DataContext = new MainViewModel(catalog),
+            DataContext = new ProjectViewModel(catalog),
         };
         mainWindow.Show();
     }

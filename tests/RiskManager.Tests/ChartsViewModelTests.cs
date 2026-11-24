@@ -5,9 +5,9 @@ namespace RiskManager.Tests;
 
 public class ChartsViewModelTests
 {
-    private readonly MainViewModel _main = new(CatalogLoader.LoadDefault());
+    private readonly ProjectViewModel _project = new(CatalogLoader.LoadDefault());
 
-    private ChartsViewModel Charts => _main.Charts;
+    private ChartsViewModel Charts => _project.Charts;
 
     [Fact]
     public void NoRisks_ArraysAreEmptyOrZero()
@@ -72,7 +72,7 @@ public class ChartsViewModelTests
         AssessThreeRisks();
         Evaluate("t1", 0.1, 0.1);
 
-        _main.Estimates.Rows.Single(row => row.Code == "t1").Loss = 1;
+        _project.Estimates.Rows.Single(row => row.Code == "t1").Loss = 1;
 
         Assert.Equal(["t1", "m1", "c1"], Charts.RiskCodes);
         Assert.Equal(1, Charts.ValuesBefore[0], 10);
@@ -86,7 +86,7 @@ public class ChartsViewModelTests
         AssessThreeRisks();
         Evaluate("t1", 0.1, 0.1);
 
-        _main.Events.ClearAllCommand.Execute(null);
+        _project.Events.ClearAllCommand.Execute(null);
 
         NoRisks_ArraysAreEmptyOrZero();
     }
@@ -115,8 +115,8 @@ public class ChartsViewModelTests
     [Fact]
     public void NullArguments_Throw()
     {
-        Assert.Throws<ArgumentNullException>(() => new ChartsViewModel(null!, _main.Monitoring));
-        Assert.Throws<ArgumentNullException>(() => new ChartsViewModel(_main.Analysis, null!));
+        Assert.Throws<ArgumentNullException>(() => new ChartsViewModel(null!, _project.Monitoring));
+        Assert.Throws<ArgumentNullException>(() => new ChartsViewModel(_project.Analysis, null!));
     }
 
     // vr: t1 = 0.1, c1 = 0.5, m1 = 0.9.
@@ -129,8 +129,8 @@ public class ChartsViewModelTests
 
     private void Assess(string code, double loss)
     {
-        _main.Events.Items.Single(item => item.Code == code).IsPresent = true;
-        EstimateRowViewModel row = _main.Estimates.Rows.Single(r => r.Code == code);
+        _project.Events.Items.Single(item => item.Code == code).IsPresent = true;
+        EstimateRowViewModel row = _project.Estimates.Rows.Single(r => r.Code == code);
 
         foreach (ExpertEstimateViewModel cell in row.Estimates)
         {
@@ -142,8 +142,8 @@ public class ChartsViewModelTests
 
     private void Evaluate(string code, double probability, double loss)
     {
-        _main.Measures.Rows.Single(row => row.Ranked.Risk.Event.Code == code).Items[0].IsSelected = true;
-        MeasureEvaluationViewModel evaluation = _main.Monitoring.Rows
+        _project.Measures.Rows.Single(row => row.Ranked.Risk.Event.Code == code).Items[0].IsSelected = true;
+        MeasureEvaluationViewModel evaluation = _project.Monitoring.Rows
             .Single(row => row.Ranked.Risk.Event.Code == code).Evaluations[0];
         evaluation.Probability = probability;
         evaluation.Loss = loss;

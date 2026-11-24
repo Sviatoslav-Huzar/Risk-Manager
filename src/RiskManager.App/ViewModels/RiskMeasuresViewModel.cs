@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RiskManager.Core.Domain;
 
@@ -9,19 +10,31 @@ namespace RiskManager.App.ViewModels;
 /// </summary>
 public partial class RiskMeasuresViewModel : ObservableObject
 {
-    public RiskMeasuresViewModel(RankedRisk ranked, IReadOnlyList<Measure> measures)
+    /// <param name="ranked">The analysed risk.</param>
+    /// <param name="measures">All measures of the catalog.</param>
+    /// <param name="markedCodes">Codes of the measures that are marked from the start.</param>
+    public RiskMeasuresViewModel(
+        RankedRisk ranked,
+        IReadOnlyList<Measure> measures,
+        IReadOnlyCollection<string>? markedCodes = null)
     {
         ArgumentNullException.ThrowIfNull(ranked);
         ArgumentNullException.ThrowIfNull(measures);
 
         Ranked = ranked;
-        Items = measures.Select(measure => new MeasureItemViewModel(measure)).ToList();
-        SelectedMeasures = [];
+        Items = measures
+            .Select(measure => new MeasureItemViewModel(measure)
+            {
+                IsSelected = markedCodes?.Contains(measure.Code) ?? false,
+            })
+            .ToList();
 
         foreach (MeasureItemViewModel item in Items)
         {
             item.PropertyChanged += OnItemPropertyChanged;
         }
+
+        UpdateSelectedMeasures();
     }
 
     /// <summary>
@@ -50,10 +63,16 @@ public partial class RiskMeasuresViewModel : ObservableObject
     {
         if (e.PropertyName == nameof(MeasureItemViewModel.IsSelected))
         {
-            SelectedMeasures = Items
-                .Where(item => item.IsSelected)
-                .Select(item => item.Measure)
-                .ToList();
+            UpdateSelectedMeasures();
         }
+    }
+
+    [MemberNotNull(nameof(SelectedMeasures))]
+    private void UpdateSelectedMeasures()
+    {
+        SelectedMeasures = Items
+            .Where(item => item.IsSelected)
+            .Select(item => item.Measure)
+            .ToList();
     }
 }

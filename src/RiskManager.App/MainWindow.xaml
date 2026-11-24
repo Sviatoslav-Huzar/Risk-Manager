@@ -6,7 +6,7 @@
         xmlns:vm="clr-namespace:RiskManager.App.ViewModels"
         xmlns:views="clr-namespace:RiskManager.App.Views"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=False}"
+        d:DataContext="{d:DesignInstance Type=vm:ProjectViewModel, IsDesignTimeCreatable=False}"
         Title="Управління ризиками розроблення ПЗ" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen">
 
