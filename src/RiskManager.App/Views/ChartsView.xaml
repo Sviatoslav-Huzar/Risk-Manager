@@ -1,0 +1,161 @@
+<UserControl x:Class="RiskManager.App.Views.ChartsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:RiskManager.App.ViewModels"
+             xmlns:views="clr-namespace:RiskManager.App.Views"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.WPF;assembly=LiveChartsCore.SkiaSharpView.WPF"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:ChartsViewModel, IsDesignTimeCreatable=False}"
+             d:DesignWidth="1050" d:DesignHeight="600">
+
+    <UserControl.Resources>
+        <Style x:Key="ChartTitle" TargetType="TextBlock">
+            <Setter Property="DockPanel.Dock" Value="Top" />
+            <Setter Property="Margin" Value="0,0,0,4" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+    </UserControl.Resources>
+
+    <!-- DrawMargin and ClippingMode leave room above the columns for the labels.
+         One pair of colors on all charts: blue is "before", orange is "after".
+         The pair stays distinguishable for people with color blindness. -->
+    <Grid Margin="12">
+        <Grid>
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RiskCodes.Length}" Value="0">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="3*" />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <DockPanel Grid.Row="0" Grid.Column="0" Margin="0,0,12,12">
+                <TextBlock Style="{StaticResource ChartTitle}" Text="Імовірності за групами ризиків (5.6)" />
+                <lvc:CartesianChart DrawMargin="Auto,24,Auto,Auto">
+                    <lvc:CartesianChart.Series>
+                        <lvc:SeriesCollection>
+                            <lvc:XamlColumnSeries Values="{Binding GroupShares}" SeriesName="Частка"
+                                                  Fill="#2a78d6" MaxBarWidth="40" Rx="4" Ry="4"
+                                                  ShowDataLabels="True" DataLabelsPaint="#52514e" DataLabelsSize="12"
+                                                  DataLabelsPosition="Top" ClippingMode="None"
+                                                  DataLabelsFormatter="{x:Static views:ChartFormats.PercentLabel}"
+                                                  YToolTipLabelFormatter="{x:Static views:ChartFormats.PercentLabel}" />
+                        </lvc:SeriesCollection>
+                    </lvc:CartesianChart.Series>
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:AxesCollection>
+                            <lvc:XamlAxis Labels="{Binding GroupNames}" LabelsPaint="#52514e" TextSize="12" />
+                        </lvc:AxesCollection>
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:AxesCollection>
+                            <lvc:XamlAxis MinLimit="0" LabelsPaint="#52514e" SeparatorsPaint="#e4e3df" TextSize="12"
+                                          Labeler="{x:Static views:ChartFormats.Percent}" />
+                        </lvc:AxesCollection>
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </DockPanel>
+
+            <DockPanel Grid.Row="0" Grid.Column="1" Margin="12,0,0,12">
+                <TextBlock Style="{StaticResource ChartTitle}" Text="Кількість ризиків за пріоритетами" />
+                <lvc:CartesianChart LegendPosition="Top" LegendTextPaint="#52514e" LegendTextSize="12"
+                                    DrawMargin="Auto,46,Auto,Auto">
+                    <lvc:CartesianChart.Series>
+                        <lvc:SeriesCollection>
+                            <lvc:XamlColumnSeries Values="{Binding PriorityCountsBefore}" SeriesName="До заходів"
+                                                  Fill="#2a78d6" MaxBarWidth="30" Rx="4" Ry="4"
+                                                  ShowDataLabels="True" DataLabelsPaint="#52514e" DataLabelsSize="12"
+                                                  DataLabelsPosition="Top" ClippingMode="None"
+                                                  DataLabelsFormatter="{x:Static views:ChartFormats.IntegerLabel}" />
+                            <lvc:XamlColumnSeries Values="{Binding PriorityCountsAfter}" SeriesName="Після заходів"
+                                                  Fill="#eb6834" MaxBarWidth="30" Rx="4" Ry="4"
+                                                  ShowDataLabels="True" DataLabelsPaint="#52514e" DataLabelsSize="12"
+                                                  DataLabelsPosition="Top" ClippingMode="None"
+                                                  DataLabelsFormatter="{x:Static views:ChartFormats.IntegerLabel}" />
+                        </lvc:SeriesCollection>
+                    </lvc:CartesianChart.Series>
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:AxesCollection>
+                            <lvc:XamlAxis Labels="{Binding PriorityNames}" LabelsPaint="#52514e" TextSize="12" />
+                        </lvc:AxesCollection>
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:AxesCollection>
+                            <lvc:XamlAxis MinLimit="0" MinStep="1" LabelsPaint="#52514e" SeparatorsPaint="#e4e3df" TextSize="12"
+                                          Labeler="{x:Static views:ChartFormats.Integer}" />
+                        </lvc:AxesCollection>
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </DockPanel>
+
+            <DockPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2">
+                <TextBlock DockPanel.Dock="Bottom" Margin="0,4,0,0" FontWeight="SemiBold" Foreground="#B45309"
+                           Text="{Binding MissingCount, StringFormat='Ризиків без оцінки після заходів: {0}. Значення «після» показано лише для решти.'}">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding MissingCount}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+
+                <TextBlock Style="{StaticResource ChartTitle}" Text="Величина ризиків до (vr) і після (evr) заходів" />
+                <lvc:CartesianChart LegendPosition="Top" LegendTextPaint="#52514e" LegendTextSize="12">
+                    <lvc:CartesianChart.Series>
+                        <lvc:SeriesCollection>
+                            <lvc:XamlColumnSeries Values="{Binding ValuesBefore}" SeriesName="До заходів (vr)"
+                                                  Fill="#2a78d6" MaxBarWidth="20" Rx="2" Ry="2" Padding="1"
+                                                  YToolTipLabelFormatter="{x:Static views:ChartFormats.DecimalLabel}" />
+                            <lvc:XamlColumnSeries Values="{Binding ValuesAfter}" SeriesName="Після заходів (evr)"
+                                                  Fill="#eb6834" MaxBarWidth="20" Rx="2" Ry="2" Padding="1"
+                                                  YToolTipLabelFormatter="{x:Static views:ChartFormats.DecimalLabel}" />
+                        </lvc:SeriesCollection>
+                    </lvc:CartesianChart.Series>
+                    <lvc:CartesianChart.XAxes>
+                        <lvc:AxesCollection>
+                            <!-- Every code is shown, even if there are 46 of them. -->
+                            <lvc:XamlAxis Labels="{Binding RiskCodes}" MinStep="1" ForceStepToMin="True"
+                                          LabelsRotation="-90" LabelsPaint="#52514e" TextSize="11" />
+                        </lvc:AxesCollection>
+                    </lvc:CartesianChart.XAxes>
+                    <lvc:CartesianChart.YAxes>
+                        <lvc:AxesCollection>
+                            <lvc:XamlAxis MinLimit="0" LabelsPaint="#52514e" SeparatorsPaint="#e4e3df" TextSize="12"
+                                          Labeler="{x:Static views:ChartFormats.Decimal}" />
+                        </lvc:AxesCollection>
+                    </lvc:CartesianChart.YAxes>
+                </lvc:CartesianChart>
+            </DockPanel>
+        </Grid>
+
+        <TextBlock Text="Спочатку заповніть оцінки на вкладці «Експертні оцінки»">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource HintText}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding RiskCodes.Length}" Value="0">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+    </Grid>
+</UserControl>

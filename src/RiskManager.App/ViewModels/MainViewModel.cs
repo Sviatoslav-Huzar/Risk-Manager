@@ -5,7 +5,7 @@ namespace RiskManager.App.ViewModels;
 
 /// <summary>
 /// The view model of the main window — the root of the view model tree.
-/// Holds one view model per tab; more tabs will be added in later iterations.
+/// Holds one view model per tab.
 /// </summary>
 public sealed class MainViewModel : ObservableObject
 {
@@ -17,10 +17,13 @@ public sealed class MainViewModel : ObservableObject
         Events = new ChecklistViewModel(catalog.Events);
 
         // The only place where tabs are connected. The dependencies go one way,
-        // Events -> Estimates -> Analysis -> Measures: a tab knows only its source.
+        // Events -> Estimates -> Analysis -> Measures -> Monitoring: a tab knows
+        // only its source.
         Estimates = new EstimatesViewModel(Events);
         Analysis = new AnalysisViewModel(Estimates);
         Measures = new MeasuresViewModel(Analysis, catalog.Measures);
+        Monitoring = new MonitoringViewModel(Measures);
+        Charts = new ChartsViewModel(Analysis, Monitoring);
     }
 
     /// <summary>The "Risk sources" tab (stage 1.1).</summary>
@@ -37,4 +40,10 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>The "Measures" tab (stage 3).</summary>
     public MeasuresViewModel Measures { get; }
+
+    /// <summary>The "Monitoring" tab (stage 4).</summary>
+    public MonitoringViewModel Monitoring { get; }
+
+    /// <summary>The "Charts" tab.</summary>
+    public ChartsViewModel Charts { get; }
 }
