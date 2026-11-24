@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
+using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -19,17 +20,28 @@ public partial class MeasuresViewModel : ObservableObject
     // Keeps the marks of risks that are temporarily absent from the analysis.
     private readonly Dictionary<RiskEvent, RiskMeasuresViewModel> _rowsByEvent = [];
 
+    // The marks of a project file. A risk that is not analysed yet has no row,
+    // so its marks wait here until it gets one.
+    private readonly Dictionary<string, IReadOnlyList<string>> _savedMarks;
+
     // The row the user clicked, as opposed to the one selected automatically.
     private RiskMeasuresViewModel? _userChoice;
     private bool _isUpdatingRows;
 
-    public MeasuresViewModel(AnalysisViewModel analysis, IReadOnlyList<Measure> measures)
+    /// <param name="analysis">The "Analysis" tab.</param>
+    /// <param name="measures">All measures of the catalog.</param>
+    /// <param name="saved">The marks of a project file.</param>
+    public MeasuresViewModel(
+        AnalysisViewModel analysis,
+        IReadOnlyList<Measure> measures,
+        IReadOnlyCollection<RiskData>? saved = null)
     {
         ArgumentNullException.ThrowIfNull(analysis);
         ArgumentNullException.ThrowIfNull(measures);
 
         _analysis = analysis;
         _measures = measures;
+        _savedMarks = (saved ?? []).ToDictionary(risk => risk.Event, risk => risk.Measures);
         _analysis.PropertyChanged += OnAnalysisPropertyChanged;
 
         UpdateRows();
@@ -56,6 +68,16 @@ public partial class MeasuresViewModel : ObservableObject
 
     /// <summary>How many risks have at least one measure.</summary>
     public int PlannedCount => PlannedRows.Count;
+
+    /// <summary>Codes of the measures marked for the risk, even if it has no row at the moment.</summary>
+    public IReadOnlyList<string> GetMarkedCodes(RiskEvent riskEvent)
+    {
+        ArgumentNullException.ThrowIfNull(riskEvent);
+
+        return _rowsByEvent.TryGetValue(riskEvent, out RiskMeasuresViewModel? row)
+            ? row.SelectedMeasures.Select(measure => measure.Code).ToList()
+            : _savedMarks.GetValueOrDefault(riskEvent.Code, []);
+    }
 
     private void OnAnalysisPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -102,7 +124,7 @@ public partial class MeasuresViewModel : ObservableObject
         }
         else
         {
-            row = new RiskMeasuresViewModel(ranked, _measures);
+            row = new RiskMeasuresViewModel(ranked, _measures, GetMarkedCodes(riskEvent));
             row.PropertyChanged += OnRowPropertyChanged;
             _rowsByEvent.Add(riskEvent, row);
         }

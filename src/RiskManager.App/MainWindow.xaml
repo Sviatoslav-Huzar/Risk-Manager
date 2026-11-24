@@ -7,43 +7,67 @@
         xmlns:views="clr-namespace:RiskManager.App.Views"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel, IsDesignTimeCreatable=False}"
-        Title="Управління ризиками розроблення ПЗ" Height="700" Width="1100"
+        Title="{Binding Title}" Height="700" Width="1100"
         WindowStartupLocation="CenterScreen">
 
-    <!-- The window's DataContext is MainViewModel (set in App.OnStartup);
-         every tab picks its own part of it. -->
-    <TabControl Margin="8">
-        <TabItem Header="Джерела ризиків">
-            <!-- Sources is a property of MainViewModel: from here on down
-                 the DataContext is ChecklistViewModel. -->
-            <views:ChecklistView DataContext="{Binding Sources}"
-                                 Instruction="Етап 1.1. Позначте джерела ризиків, які наявні у вашому програмному проєкті." />
-        </TabItem>
+    <Window.InputBindings>
+        <KeyBinding Modifiers="Ctrl" Key="N" Command="{Binding NewCommand}" />
+        <KeyBinding Modifiers="Ctrl" Key="O" Command="{Binding OpenCommand}" />
+        <KeyBinding Modifiers="Ctrl" Key="S" Command="{Binding SaveCommand}" />
+        <KeyBinding Modifiers="Ctrl+Shift" Key="S" Command="{Binding SaveAsCommand}" />
+    </Window.InputBindings>
 
-        <!-- The same control, another part of MainViewModel and another text. -->
-        <TabItem Header="Ризикові події">
-            <views:ChecklistView DataContext="{Binding Events}"
-                                 Instruction="Етап 1.2. Позначте ризикові події, які можуть настати у вашому програмному проєкті." />
-        </TabItem>
+    <DockPanel>
+        <!-- InputGestureText only shows the shortcut; it works because of the
+             KeyBinding above. -->
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_Файл">
+                <MenuItem Header="_Новий" InputGestureText="Ctrl+N" Command="{Binding NewCommand}" />
+                <MenuItem Header="_Відкрити…" InputGestureText="Ctrl+O" Command="{Binding OpenCommand}" />
+                <Separator />
+                <MenuItem Header="_Зберегти" InputGestureText="Ctrl+S" Command="{Binding SaveCommand}" />
+                <MenuItem Header="Зберегти _як…" InputGestureText="Ctrl+Shift+S" Command="{Binding SaveAsCommand}" />
+                <Separator />
+                <MenuItem Header="Ви_хід" InputGestureText="Alt+F4" Click="OnExitClick" />
+            </MenuItem>
+        </Menu>
 
-        <TabItem Header="Експертні оцінки">
-            <views:EstimatesView DataContext="{Binding Estimates}" />
-        </TabItem>
+        <!-- The window's DataContext is MainViewModel (set in App.OnStartup). Here
+             it changes to the open project, and every tab picks its own part of it.
+             New and Open replace Project, and all tabs follow. -->
+        <TabControl Margin="8" DataContext="{Binding Project}">
+            <TabItem Header="Джерела ризиків">
+                <!-- Sources is a property of ProjectViewModel: from here on down
+                     the DataContext is ChecklistViewModel. -->
+                <views:ChecklistView DataContext="{Binding Sources}"
+                                     Instruction="Етап 1.1. Позначте джерела ризиків, які наявні у вашому програмному проєкті." />
+            </TabItem>
 
-        <TabItem Header="Аналіз">
-            <views:AnalysisView DataContext="{Binding Analysis}" />
-        </TabItem>
+            <!-- The same control, another part of the project and another text. -->
+            <TabItem Header="Ризикові події">
+                <views:ChecklistView DataContext="{Binding Events}"
+                                     Instruction="Етап 1.2. Позначте ризикові події, які можуть настати у вашому програмному проєкті." />
+            </TabItem>
 
-        <TabItem Header="Заходи">
-            <views:MeasuresView DataContext="{Binding Measures}" />
-        </TabItem>
+            <TabItem Header="Експертні оцінки">
+                <views:EstimatesView DataContext="{Binding Estimates}" />
+            </TabItem>
 
-        <TabItem Header="Моніторинг">
-            <views:MonitoringView DataContext="{Binding Monitoring}" />
-        </TabItem>
+            <TabItem Header="Аналіз">
+                <views:AnalysisView DataContext="{Binding Analysis}" />
+            </TabItem>
 
-        <TabItem Header="Графіки">
-            <views:ChartsView DataContext="{Binding Charts}" />
-        </TabItem>
-    </TabControl>
+            <TabItem Header="Заходи">
+                <views:MeasuresView DataContext="{Binding Measures}" />
+            </TabItem>
+
+            <TabItem Header="Моніторинг">
+                <views:MonitoringView DataContext="{Binding Monitoring}" />
+            </TabItem>
+
+            <TabItem Header="Графіки">
+                <views:ChartsView DataContext="{Binding Charts}" />
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>

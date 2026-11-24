@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RiskManager.Core.Calculations;
+using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -23,11 +25,17 @@ public partial class EstimatesViewModel : ObservableObject
 
     /// <param name="events">The checklist of the "Risk events" tab.</param>
     /// <param name="random">Tests pass a seeded generator to get repeatable numbers.</param>
-    public EstimatesViewModel(ChecklistViewModel events, Random? random = null)
+    /// <param name="saved">The numbers of a project file.</param>
+    public EstimatesViewModel(
+        ChecklistViewModel events,
+        Random? random = null,
+        IReadOnlyCollection<RiskData>? saved = null)
     {
         ArgumentNullException.ThrowIfNull(events);
         _events = events;
         _random = random ?? Random.Shared;
+
+        Dictionary<string, RiskData> savedByCode = (saved ?? []).ToDictionary(risk => risk.Event);
 
         foreach (ChecklistItemViewModel item in events.Items)
         {
@@ -35,6 +43,12 @@ public partial class EstimatesViewModel : ObservableObject
                 ?? throw new ArgumentException("The checklist must contain risk events.", nameof(events));
 
             var row = new EstimateRowViewModel(riskEvent);
+
+            if (savedByCode.TryGetValue(item.Code, out RiskData? data))
+            {
+                row.Restore(data);
+            }
+
             row.PropertyChanged += OnRowPropertyChanged;
             _rowsByItem.Add(item, row);
 
@@ -46,9 +60,13 @@ public partial class EstimatesViewModel : ObservableObject
             item.PropertyChanged += OnItemPropertyChanged;
         }
 
-        // New rows are empty, so there is nothing to assess yet.
-        Assessments = [];
+        AllRows = events.Items.Select(item => _rowsByItem[item]).ToList();
+
+        UpdateSummary();
     }
+
+    /// <summary>The rows of all events, also of the unchecked ones, in catalog order.</summary>
+    public IReadOnlyList<EstimateRowViewModel> AllRows { get; }
 
     /// <summary>
     /// The rows of the checked events in catalog order. ObservableCollection
@@ -116,6 +134,7 @@ public partial class EstimatesViewModel : ObservableObject
         }
     }
 
+    [MemberNotNull(nameof(Assessments))]
     private void UpdateSummary()
     {
         Assessments = Rows

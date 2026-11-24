@@ -55,6 +55,13 @@ public class NullableNumberConverterTests
         Assert.Same(DependencyProperty.UnsetValue, ConvertBack(text));
     }
 
+    [Fact]
+    public void ConvertBack_HugeNumber_ReturnsUnsetValue()
+    {
+        // 400 digits do not fit into a double and become infinity.
+        Assert.Same(DependencyProperty.UnsetValue, ConvertBack(new string('9', 400)));
+    }
+
     private object? ConvertBack(string? text) =>
         _converter.ConvertBack(text, typeof(double?), null, Ukrainian);
 }

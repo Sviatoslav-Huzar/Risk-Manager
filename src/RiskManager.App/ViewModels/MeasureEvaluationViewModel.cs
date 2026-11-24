@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RiskManager.Core.Calculations;
+using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -68,6 +69,13 @@ public partial class MeasureEvaluationViewModel : ObservableValidator
     partial void OnProbabilityChanged(double? value) => Recalculate();
 
     partial void OnLossChanged(double? value) => Recalculate();
+
+    /// <summary>Takes over the numbers of a project file.</summary>
+    internal void Restore(EvaluationData data)
+    {
+        Probability = data.Probability;
+        Loss = data.Loss;
+    }
 
     private void Recalculate()
     {

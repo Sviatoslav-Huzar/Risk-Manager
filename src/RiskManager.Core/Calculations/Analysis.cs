@@ -7,6 +7,9 @@ namespace RiskManager.Core.Calculations;
 /// </summary>
 public static class Analysis
 {
+    /// <summary>The number of experts in table 5.1.</summary>
+    public const int ExpertCount = 10;
+
     /// <summary>
     /// er_i = average of the experts' estimates for one risk event (formula 5.5).
     /// </summary>

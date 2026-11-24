@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using RiskManager.Core.Calculations;
+using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -15,11 +16,21 @@ public partial class RiskMonitoringViewModel : ObservableObject
     // Keeps the numbers of measures that are temporarily not marked.
     private readonly Dictionary<Measure, MeasureEvaluationViewModel> _evaluationsByMeasure = [];
 
-    public RiskMonitoringViewModel(RankedRisk ranked, IReadOnlyList<Measure> measures)
+    // The numbers of a project file wait here until their measure is marked.
+    private readonly Dictionary<string, EvaluationData> _saved;
+
+    /// <param name="ranked">The analysed risk.</param>
+    /// <param name="measures">The marked measures.</param>
+    /// <param name="saved">The numbers of a project file.</param>
+    public RiskMonitoringViewModel(
+        RankedRisk ranked,
+        IReadOnlyList<Measure> measures,
+        IReadOnlyCollection<EvaluationData>? saved = null)
     {
         ArgumentNullException.ThrowIfNull(ranked);
         ArgumentNullException.ThrowIfNull(measures);
 
+        _saved = (saved ?? []).ToDictionary(evaluation => evaluation.Measure);
         Ranked = ranked;
         Evaluations = [];
         Update(ranked, measures);
@@ -69,6 +80,19 @@ public partial class RiskMonitoringViewModel : ObservableObject
         Recalculate();
     }
 
+    /// <summary>The numbers of all measures, also of those that are not marked now.</summary>
+    internal IReadOnlyList<EvaluationData> GetAllData()
+    {
+        IEnumerable<EvaluationData> entered = _evaluationsByMeasure.Values
+            .Select(evaluation => new EvaluationData(evaluation.Code, evaluation.Probability, evaluation.Loss));
+
+        // The entered numbers come first: they replace the saved ones.
+        return entered
+            .Concat(_saved.Values)
+            .DistinctBy(evaluation => evaluation.Measure)
+            .ToList();
+    }
+
     internal void FillEmpty(Random random)
     {
         foreach (MeasureEvaluationViewModel evaluation in Evaluations)
@@ -82,6 +106,12 @@ public partial class RiskMonitoringViewModel : ObservableObject
         if (!_evaluationsByMeasure.TryGetValue(measure, out MeasureEvaluationViewModel? evaluation))
         {
             evaluation = new MeasureEvaluationViewModel(measure);
+
+            if (_saved.TryGetValue(measure.Code, out EvaluationData? data))
+            {
+                evaluation.Restore(data);
+            }
+
             evaluation.PropertyChanged += OnEvaluationPropertyChanged;
             _evaluationsByMeasure.Add(measure, evaluation);
         }

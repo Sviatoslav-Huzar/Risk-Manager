@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using RiskManager.Core.Calculations;
+using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.App.ViewModels;
@@ -20,17 +21,26 @@ public partial class MonitoringViewModel : ObservableObject
     // Keeps the numbers of risks that are temporarily absent.
     private readonly Dictionary<RiskEvent, RiskMonitoringViewModel> _rowsByEvent = [];
 
+    // The numbers of a project file. A risk without marked measures has no row,
+    // so its numbers wait here until it gets one.
+    private readonly Dictionary<string, IReadOnlyList<EvaluationData>> _savedEvaluations;
+
     // The row the user clicked, as opposed to the one selected automatically.
     private RiskMonitoringViewModel? _userChoice;
     private bool _isUpdatingRows;
 
     /// <param name="measures">The "Measures" tab.</param>
     /// <param name="random">Tests pass a seeded generator to get repeatable numbers.</param>
-    public MonitoringViewModel(MeasuresViewModel measures, Random? random = null)
+    /// <param name="saved">The numbers of a project file.</param>
+    public MonitoringViewModel(
+        MeasuresViewModel measures,
+        Random? random = null,
+        IReadOnlyCollection<RiskData>? saved = null)
     {
         ArgumentNullException.ThrowIfNull(measures);
         _measures = measures;
         _random = random ?? Random.Shared;
+        _savedEvaluations = (saved ?? []).ToDictionary(risk => risk.Event, risk => risk.Evaluations);
         _measures.PropertyChanged += OnMeasuresPropertyChanged;
 
         UpdateRows();
@@ -81,6 +91,16 @@ public partial class MonitoringViewModel : ObservableObject
 
     private bool CanFillRandom() => Rows.Any(row => !row.IsComplete);
 
+    /// <summary>epr and elr of all measures of the risk, even if it has no row at the moment.</summary>
+    public IReadOnlyList<EvaluationData> GetEvaluations(RiskEvent riskEvent)
+    {
+        ArgumentNullException.ThrowIfNull(riskEvent);
+
+        return _rowsByEvent.TryGetValue(riskEvent, out RiskMonitoringViewModel? row)
+            ? row.GetAllData()
+            : _savedEvaluations.GetValueOrDefault(riskEvent.Code, []);
+    }
+
     private void OnMeasuresPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(MeasuresViewModel.PlannedRows))
@@ -117,7 +137,7 @@ public partial class MonitoringViewModel : ObservableObject
         }
         else
         {
-            row = new RiskMonitoringViewModel(source.Ranked, source.SelectedMeasures);
+            row = new RiskMonitoringViewModel(source.Ranked, source.SelectedMeasures, GetEvaluations(riskEvent));
             row.PropertyChanged += OnRowPropertyChanged;
             _rowsByEvent.Add(riskEvent, row);
         }
