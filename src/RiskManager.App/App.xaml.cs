@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Markup;
+using RiskManager.App.Services;
 using RiskManager.App.ViewModels;
 using RiskManager.Core.Data;
 using RiskManager.Core.Domain;
@@ -23,7 +24,7 @@ public partial class App : Application
 
         var mainWindow = new MainWindow
         {
-            DataContext = new ProjectViewModel(catalog),
+            DataContext = new MainViewModel(catalog, new DialogService()),
         };
         mainWindow.Show();
     }

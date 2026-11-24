@@ -17,15 +17,7 @@ public partial class EstimatesView : UserControl
         InitializeComponent();
         AddExpertColumns();
 
-        // The rows change on another tab, so leaving this one is enough.
-        var editGuard = new DataGridEditGuard(Table);
-        IsVisibleChanged += (_, _) =>
-        {
-            if (!IsVisible)
-            {
-                editGuard.FinishEditing();
-            }
-        };
+        DataGridEditGuard.Attach(Table);
     }
 
     private void AddExpertColumns()

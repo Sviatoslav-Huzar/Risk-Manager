@@ -12,15 +12,6 @@ public partial class MonitoringView : UserControl
     {
         InitializeComponent();
 
-        // Clicking another risk replaces the rows of this table without leaving
-        // the tab, so editing ends as soon as the focus goes elsewhere.
-        var editGuard = new DataGridEditGuard(EvaluationTable);
-        EvaluationTable.IsKeyboardFocusWithinChanged += (_, e) =>
-        {
-            if (!(bool)e.NewValue)
-            {
-                editGuard.FinishEditing();
-            }
-        };
+        DataGridEditGuard.Attach(EvaluationTable);
     }
 }
