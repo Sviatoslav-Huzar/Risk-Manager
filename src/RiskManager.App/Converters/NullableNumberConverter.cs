@@ -33,7 +33,10 @@ public sealed class NullableNumberConverter : IValueConverter
 
         // UnsetValue means "cannot be converted": the binding reports a
         // validation error and leaves the view model untouched.
+        // A text with hundreds of digits is parsed as infinity, which is not a
+        // number either (and cannot be saved to a file).
         return double.TryParse(text.Replace(',', '.'), styles, CultureInfo.InvariantCulture, out double number)
+            && double.IsFinite(number)
             ? number
             : DependencyProperty.UnsetValue;
     }

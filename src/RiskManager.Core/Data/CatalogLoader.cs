@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using RiskManager.Core.Domain;
 
 namespace RiskManager.Core.Data;
@@ -14,16 +13,6 @@ public static class CatalogLoader
     /// (set explicitly via LogicalName in the .csproj).
     /// </summary>
     public const string DefaultResourceName = "RiskManager.Core.Data.catalog.json";
-
-    private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
-    {
-        // "Technical" in JSON <-> RiskCategory.Technical in C#.
-        Converters = { new JsonStringEnumConverter() },
-        // Fail loudly instead of silently producing half-filled objects:
-        RespectRequiredConstructorParameters = true,              // a missing "code" is an error
-        RespectNullableAnnotations = true,                        // "code": null is an error
-        UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow, // a typo like "descripton" is an error
-    };
 
     /// <summary>Loads the catalog that ships inside the assembly.</summary>
     public static RiskCatalog LoadDefault()
@@ -45,7 +34,7 @@ public static class CatalogLoader
         RiskCatalog? catalog;
         try
         {
-            catalog = JsonSerializer.Deserialize<RiskCatalog>(json, Options);
+            catalog = JsonSerializer.Deserialize<RiskCatalog>(json, JsonDefaults.Strict);
         }
         catch (JsonException ex)
         {

@@ -13,7 +13,7 @@ namespace RiskManager.App.ViewModels;
 public partial class EstimateRowViewModel : ObservableValidator
 {
     /// <summary>The number of experts in table 5.1.</summary>
-    public const int ExpertCount = 10;
+    public const int ExpertCount = Analysis.ExpertCount;
 
     public EstimateRowViewModel(RiskEvent riskEvent)
     {
